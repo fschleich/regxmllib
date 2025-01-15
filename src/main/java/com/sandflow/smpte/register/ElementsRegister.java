@@ -81,8 +81,6 @@ public abstract class ElementsRegister {
     public static ElementsRegister fromXML(Reader reader) throws RegXMLException, IOException, DuplicateEntryException {
 
         try {
-            System.out.println(javax.xml.bind.JAXBContext.class.getProtectionDomain().getCodeSource());
-
             JAXBContext ctx = JAXBContext.newInstance(com.sandflow.smpte.register.catsup.ElementsRegisterModel.class);
 
             Unmarshaller m = ctx.createUnmarshaller();
