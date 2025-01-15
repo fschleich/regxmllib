@@ -26,6 +26,7 @@
 package com.sandflow.smpte.register;
 
 import com.sandflow.smpte.register.exceptions.DuplicateEntryException;
+import com.sandflow.smpte.util.RegXMLException;
 import com.sandflow.smpte.util.UL;
 import java.io.IOException;
 import java.io.Reader;
@@ -63,51 +64,59 @@ public abstract class LabelsRegister {
 
     public abstract Collection<? extends Entry> getEntries();
 
-    public void toXML(Writer writer) throws JAXBException, IOException {
+    public void toXML(Writer writer) throws RegXMLException, IOException {
 
-        JAXBContext ctx = JAXBContext.newInstance(this.getClass());
+        try {
+            JAXBContext ctx = JAXBContext.newInstance(this.getClass());
 
-        Marshaller m = ctx.createMarshaller();
-        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        m.marshal(this, writer);
-        writer.close();
-    }
-
-    public static LabelsRegister fromXML(Reader reader) throws JAXBException, IOException, DuplicateEntryException {
-
-        JAXBContext ctx = JAXBContext.newInstance(com.sandflow.smpte.register.catsup.LabelsRegisterModel.class);
-
-        Unmarshaller m = ctx.createUnmarshaller();
-        LabelsRegister reg = (LabelsRegister) m.unmarshal(reader);
-
-        for (Entry te : reg.getEntries()) {
-            QualifiedSymbol sym = new QualifiedSymbol(te.getSymbol(), te.getNamespaceName());
-
-            if (reg.getEntryByUL(te.getUL()) != null) {
-                throw new DuplicateEntryException(
-                        String.format("UL = %s is already present (symbol = %s).",
-                                te.getUL(),
-                                te.getSymbol()
-                        )
-                );
-            }
-
-            if (reg.entriesBySymbol.get(sym) != null) {
-                throw new DuplicateEntryException(
-                        String.format(
-                                "Symbol = %s  is already present (UL = %s).",
-                                te.getSymbol(),
-                                te.getUL()
-                        )
-                );
-            }
-
-            reg.entriesByUL.put(te.getUL(), te);
-            reg.entriesBySymbol.put(sym, te);
+            Marshaller m = ctx.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            m.marshal(this, writer);
+            writer.close();
+        } catch (JAXBException e) {
+            throw new RegXMLException(e);
         }
 
-        return reg;
+    }
 
+    public static LabelsRegister fromXML(Reader reader) throws RegXMLException, IOException, DuplicateEntryException {
+
+        try {
+            JAXBContext ctx = JAXBContext.newInstance(com.sandflow.smpte.register.catsup.LabelsRegisterModel.class);
+
+            Unmarshaller m = ctx.createUnmarshaller();
+            LabelsRegister reg = (LabelsRegister) m.unmarshal(reader);
+
+            for (Entry te : reg.getEntries()) {
+                QualifiedSymbol sym = new QualifiedSymbol(te.getSymbol(), te.getNamespaceName());
+
+                if (reg.getEntryByUL(te.getUL()) != null) {
+                    throw new DuplicateEntryException(
+                            String.format("UL = %s is already present (symbol = %s).",
+                                    te.getUL(),
+                                    te.getSymbol()
+                            )
+                    );
+                }
+
+                if (reg.entriesBySymbol.get(sym) != null) {
+                    throw new DuplicateEntryException(
+                            String.format(
+                                    "Symbol = %s  is already present (UL = %s).",
+                                    te.getSymbol(),
+                                    te.getUL()
+                            )
+                    );
+                }
+
+                reg.entriesByUL.put(te.getUL(), te);
+                reg.entriesBySymbol.put(sym, te);
+            }
+
+            return reg;
+        } catch (JAXBException e) {
+            throw new RegXMLException(e);
+        }
     }
 
     /**

@@ -49,6 +49,7 @@ import com.sandflow.smpte.regxml.dict.definitions.WeakReferenceTypeDefinition;
 import com.sandflow.smpte.regxml.dict.exceptions.DuplicateSymbolException;
 import com.sandflow.smpte.regxml.dict.exceptions.IllegalDefinitionException;
 import com.sandflow.smpte.util.AUID;
+import com.sandflow.smpte.util.RegXMLException;
 import com.sandflow.smpte.util.UL;
 import com.sandflow.smpte.util.UUID;
 import com.sandflow.smpte.util.xml.UUIDAdapter;
@@ -129,20 +130,25 @@ public class MetaDictionary implements DefinitionResolver {
      * @throws IOException
      * @throws IllegalDefinitionException 
      */
-    public static MetaDictionary fromXML(Reader reader) throws JAXBException, IOException, IllegalDefinitionException {
-        JAXBContext ctx = JAXBContext.newInstance(MetaDictionary.class);
-        
-        Unmarshaller m = ctx.createUnmarshaller();
-        MetaDictionary md = (MetaDictionary) m.unmarshal(reader);
-        
-        for (Definition def : md.definitions) {
-            
-            def.setNamespace(md.getSchemeURI());
-            
-            md.indexDefinition(def);
+    public static MetaDictionary fromXML(Reader reader) throws RegXMLException, IOException, IllegalDefinitionException {
+        try {
+            JAXBContext ctx = JAXBContext.newInstance(MetaDictionary.class);
+
+            Unmarshaller m = ctx.createUnmarshaller();
+            MetaDictionary md = (MetaDictionary) m.unmarshal(reader);
+
+            for (Definition def : md.definitions) {
+
+                def.setNamespace(md.getSchemeURI());
+
+                md.indexDefinition(def);
+            }
+
+            return md;
+        } catch (JAXBException e) {
+            throw new RegXMLException(e);
         }
 
-        return md;
     }
 
     
